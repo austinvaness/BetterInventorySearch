@@ -102,16 +102,9 @@ namespace avaness.BetterInventorySearch
                 foreach (MyGuiGridItem gridItem in grid.Items)
                 {
                     if (noSearch)
-                    {
                         gridItem.Enabled = true;
-                    }
                     else if (gridItem.UserData is MyPhysicalInventoryItem item && TryGetDisplayName(item, out string displayName))
-                    {
-                        if (SearchMatches(args, displayName))
-                            gridItem.Enabled = true;
-                        else
-                            gridItem.Enabled = false;
-                    }
+                        gridItem.Enabled = SearchMatches(args, displayName);
                 }
             }
         }
