@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BetterInventorySearch", "BetterInventorySearch\BetterInventorySearch.csproj", "{0079043D-B8DC-4C1D-AC11-82C58D9B9986}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0079043D-B8DC-4C1D-AC11-82C58D9B9986}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0079043D-B8DC-4C1D-AC11-82C58D9B9986}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0079043D-B8DC-4C1D-AC11-82C58D9B9986}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0079043D-B8DC-4C1D-AC11-82C58D9B9986}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6791C56E-CC1F-4BA3-97BB-1231E2A7E011}
+	EndGlobalSection
+EndGlobal
