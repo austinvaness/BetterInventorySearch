@@ -89,6 +89,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProductionController.cs" />
+    <Compile Include="InventoryController.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
