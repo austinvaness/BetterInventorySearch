@@ -118,10 +118,10 @@ namespace avaness.BetterInventorySearch
         {
             foreach (string arg in search)
             {
-                if (item.Contains(arg, StringComparison.OrdinalIgnoreCase))
-                    return true;
+                if (!item.Contains(arg, StringComparison.OrdinalIgnoreCase))
+                    return false;
             }
-            return false;
+            return true;
         }
     }
 }
