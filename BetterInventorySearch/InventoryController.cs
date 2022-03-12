@@ -12,50 +12,85 @@ namespace avaness.BetterInventorySearch
 {
     public static class InventoryController
     {
-        private static FieldInfo searchBoxL, searchBoxR;
-        private static FieldInfo ownersControlL, ownersControlR;
+        private static FieldInfo m_initialRefresh;
 
         public static void Patch(Harmony harmony)
         {
             Type inventoryController = AccessTools.TypeByName("Sandbox.Game.Gui.MyTerminalInventoryController");
 
             MethodInfo original1 = inventoryController.GetMethod("SearchInList", BindingFlags.Instance | BindingFlags.NonPublic);
-            MethodInfo postfix1 = typeof(InventoryController).GetMethod("SearchInList");
+            MethodInfo postfix1 = typeof(InventoryController).GetMethod(nameof(SearchInList));
             harmony.Patch(original1, postfix: new HarmonyMethod(postfix1));
 
             MethodInfo original2 = inventoryController.GetMethod("ownerControl_InventoryContentsChanged", BindingFlags.Instance | BindingFlags.NonPublic);
-            MethodInfo postfix2 = typeof(InventoryController).GetMethod("ownerControl_InventoryContentsChanged");
+            MethodInfo postfix2 = typeof(InventoryController).GetMethod(nameof(ownerControl_InventoryContentsChanged));
             harmony.Patch(original2, postfix: new HarmonyMethod(postfix2));
 
-            searchBoxL = AccessTools.Field(inventoryController, "m_searchBoxLeft");
-            searchBoxR = AccessTools.Field(inventoryController, "m_searchBoxRight");
-            ownersControlL = AccessTools.Field(inventoryController, "m_leftOwnersControl");
-            ownersControlR = AccessTools.Field(inventoryController, "m_rightOwnersControl");
+            Type inventoryOwner = typeof(MyGuiControlInventoryOwner);
+            m_initialRefresh = AccessTools.Field(inventoryOwner, "m_initialRefresh");
+
+            MethodInfo original3 = inventoryOwner.GetMethod("RefreshInventoryContents", BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo postfix3 = typeof(InventoryController).GetMethod(nameof(RefreshInventoryContents));
+            harmony.Patch(original3, new HarmonyMethod(postfix3));
+
+            MethodInfo original4 = inventoryOwner.GetMethod("AttachOwner", BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo postfix4 = typeof(InventoryController).GetMethod(nameof(AttachOwner));
+            harmony.Patch(original4, new HarmonyMethod(postfix4));
         }
 
-        public static void ownerControl_InventoryContentsChanged(object __instance, MyGuiControlInventoryOwner control)
+        public static void AttachOwner(MyGuiControlInventoryOwner __instance)
         {
-            MyGuiControlList list = control.Owner as MyGuiControlList;
+            m_initialRefresh.SetValue(__instance, false);
+        }
+
+        public static void RefreshInventoryContents(MyGuiControlInventoryOwner __instance)
+        {
+            m_initialRefresh.SetValue(__instance, true);
+        }
+
+        public static void ownerControl_InventoryContentsChanged(MyGuiControlInventoryOwner control)
+        {
+            if(TryGetActiveSearchBox(control, out MyGuiControlSearchBox searchBox))
+            {
+                GetSearch(searchBox.TextBox, out bool emptyText, out string[] args);
+                SearchInOwner(emptyText, args, control);
+            }
+        }
+
+        private static bool TryGetActiveSearchBox(MyGuiControlInventoryOwner inventoryOwner, out MyGuiControlSearchBox searchBox)
+        {
+            searchBox = null;
+
+            // Get the parent list and the parent tab
+            MyGuiControlList list = inventoryOwner.Owner as MyGuiControlList;
             if (list == null)
-                return;
+                return false;
 
-            MyGuiControlSearchBox searchBox;
-            MyGuiControlList otherList = (MyGuiControlList)ownersControlL.GetValue(__instance);
-            if (list == otherList)
+            MyGuiControlTabPage parent = list.Owner as MyGuiControlTabPage;
+            if (parent == null)
+                return false;
+
+            // Get the search bar
+            // Reference: MyTerminalInventoryController.Init()
+            MyGuiControlList leftList = parent.Controls.GetControlByName("LeftInventory") as MyGuiControlList;
+            if (leftList == null)
+                return false;
+            if (list == leftList)
             {
-                searchBox = (MyGuiControlSearchBox)searchBoxL.GetValue(__instance);
-            }
-            else
-            {
-                otherList = (MyGuiControlList)ownersControlR.GetValue(__instance);
-                if (list == otherList)
-                    searchBox = (MyGuiControlSearchBox)searchBoxR.GetValue(__instance);
-                else
-                    return;
+                searchBox = parent.Controls.GetControlByName("BlockSearchLeft") as MyGuiControlSearchBox;
+                return searchBox != null;
             }
 
-            GetSearch(searchBox.TextBox, out bool emptyText, out string[] args);
-            SearchInOwner(emptyText, args, control);
+            MyGuiControlList rightList = parent.Controls.GetControlByName("RightInventory") as MyGuiControlList;
+            if (rightList == null)
+                return false;
+            if (list == rightList)
+            {
+                searchBox = parent.Controls.GetControlByName("BlockSearchRight") as MyGuiControlSearchBox;
+                return searchBox != null;
+            }
+
+            return false;
         }
 
         public static void SearchInList(MyGuiControlTextbox searchText, MyGuiControlList list)
@@ -95,10 +130,24 @@ namespace avaness.BetterInventorySearch
                 foreach (MyGuiGridItem gridItem in grid.Items)
                 {
                     if (noSearch)
-                        gridItem.Enabled = true;
+                        SetEnabled(gridItem, true);
                     else if (gridItem.UserData is MyPhysicalInventoryItem item && TryGetDisplayName(item, out string displayName))
-                        gridItem.Enabled = SearchMatches(args, displayName);
+                        SetEnabled(gridItem, SearchMatches(args, displayName));
                 }
+            }
+        }
+
+        private static void SetEnabled(MyGuiGridItem item, bool enabled)
+        {
+            if (enabled)
+            {
+                item.MainIconColorMask = VRageMath.Vector4.One;
+                item.Enabled = true;
+            }
+            else
+            {
+                item.MainIconColorMask = new VRageMath.Vector4(1, 1, 1, 0.5f);
+                item.Enabled = false;
             }
         }
 
