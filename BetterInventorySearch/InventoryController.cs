@@ -12,8 +12,6 @@ namespace avaness.BetterInventorySearch
 {
     public static class InventoryController
     {
-        private static FieldInfo m_initialRefresh;
-
         public static void Patch(Harmony harmony)
         {
             Type inventoryController = AccessTools.TypeByName("Sandbox.Game.Gui.MyTerminalInventoryController");
@@ -26,26 +24,7 @@ namespace avaness.BetterInventorySearch
             MethodInfo postfix2 = typeof(InventoryController).GetMethod(nameof(ownerControl_InventoryContentsChanged));
             harmony.Patch(original2, postfix: new HarmonyMethod(postfix2));
 
-            Type inventoryOwner = typeof(MyGuiControlInventoryOwner);
-            m_initialRefresh = AccessTools.Field(inventoryOwner, "m_initialRefresh");
 
-            MethodInfo original3 = inventoryOwner.GetMethod("RefreshInventoryContents", BindingFlags.Instance | BindingFlags.NonPublic);
-            MethodInfo postfix3 = typeof(InventoryController).GetMethod(nameof(RefreshInventoryContents));
-            harmony.Patch(original3, new HarmonyMethod(postfix3));
-
-            MethodInfo original4 = inventoryOwner.GetMethod("AttachOwner", BindingFlags.Instance | BindingFlags.NonPublic);
-            MethodInfo postfix4 = typeof(InventoryController).GetMethod(nameof(AttachOwner));
-            harmony.Patch(original4, new HarmonyMethod(postfix4));
-        }
-
-        public static void AttachOwner(MyGuiControlInventoryOwner __instance)
-        {
-            m_initialRefresh.SetValue(__instance, false);
-        }
-
-        public static void RefreshInventoryContents(MyGuiControlInventoryOwner __instance)
-        {
-            m_initialRefresh.SetValue(__instance, true);
         }
 
         public static void ownerControl_InventoryContentsChanged(MyGuiControlInventoryOwner control)
